@@ -1,7 +1,11 @@
 const maxLength = 5;
-const wordOfTheDayUrl = "https://words.dev-apis.com/word-of-the-day";
+let wordOfTheDayUrl = "https://words.dev-apis.com/word-of-the-day";
 const chekValidWordUrl = "https://words.dev-apis.com/validate-word";
 const letters = document.querySelectorAll(".word-section");
+const allLetters = document.querySelectorAll(".input");
+const againButton = document.querySelector(".again-button");
+const endWindow = document.querySelector(".game-end-window ");
+const endText = document.querySelector(".game-end-text");
 let row = 0;
 let column = 0;
 let storedKey = "";
@@ -34,6 +38,18 @@ const handleLetters = () => {
   }
 };
 
+const checkColor = (chcInst, letterIndex, fndIndex) => {
+  if (chcInst === -1) {
+    letters[row].children[letterIndex].classList.add("gray");
+  } else {
+    if (chcInst === i) {
+      letters[row].children[letterIndex].classList.add("green");
+      fndIndex.push(chcInst);
+    } else letters[row].children[letterIndex].classList.add("yellow");
+    fndIndex.push(chcInst);
+  }
+};
+
 const validateWord = async () => {
   const promise = await fetch(chekValidWordUrl, {
     method: "POST",
@@ -41,27 +57,27 @@ const validateWord = async () => {
   });
   const processedResponse = await promise.json();
   validationResponse = processedResponse.validWord;
-
   if (validationResponse === false) {
     alert("That not a word MOTHAFUCKAAAAAA");
     word = "";
   } else {
+    let foundIndex = [];
     for (i = 0; i < maxLength; i++) {
       let letterChecked = word.charAt(i);
       let checkedInstance = wordOfTheDay.indexOf(letterChecked);
-      if (checkedInstance === -1) {
-        letters[row].children[i].classList.add("gray");
-      } else {
-        if (checkedInstance === i) {
-          letters[row].children[i].classList.add("green");
-        } else letters[row].children[i].classList.add("yellow");
-      }
+      console.log(checkedInstance);
+      if (foundIndex.includes(checkedInstance) === true) {
+        checkedInstance = wordOfTheDay.indexOf(letterChecked, checkedInstance);
+        // console.log(checkedInstance);
+        checkColor(checkedInstance, i, foundIndex);
+      } else checkColor(checkedInstance, i, foundIndex);
     }
     word = "";
     row++;
     column = 0;
     if (row === maxLength + 1) {
-      alert("You Lost Pal...");
+      endText.innerText = "You Lost Pal...";
+      endWindow.style.visibility = "visible";
       gameOver = true;
     }
     return validationResponse;
@@ -72,7 +88,8 @@ const validateWord = async () => {
 
 const checkWord = () => {
   if (word === wordOfTheDay) {
-    alert("You Won MOTHAFUCKAAAA");
+    endText.innerText = "You've Won MOTHAFUCKAAAA";
+    endWindow.style.visibility = "visible";
     for (i = 0; i < maxLength; i++) {
       letters[row].children[i].classList.add("green");
     }
@@ -103,4 +120,28 @@ addEventListener("keydown", (event) => {
   }
 });
 
+const playAgain = () => {
+  wordOfTheDayUrl = "https://words.dev-apis.com/word-of-the-day?random=1";
+
+  letters.forEach((letter) => {
+    for (let i = 0; i < maxLength; i++) {
+      letter.children[i].classList = "input";
+      letter.children[i].innerText = "";
+    }
+  });
+  row = 0;
+  column = 0;
+  storedKey = "";
+  word = "";
+  wordOfTheDay = "";
+  validationResponse = "";
+  gameOver = false;
+  getWordOfTheDay();
+  endWindow.style.visibility = "hidden";
+};
+
+addEventListener("onClick", () => {
+  console.log(wordOfTheDay);
+  console.log(validationResponse);
+});
 getWordOfTheDay();
